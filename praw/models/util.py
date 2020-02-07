@@ -84,6 +84,7 @@ def stream_generator(
     pause_after: Optional[int] = None,
     skip_existing: bool = False,
     attribute_name: str = "fullname",
+    attribute_function: Callable[[Any], Any] = None,
     exclude_before: bool = False,
     **function_kwargs: Any
 ) -> Generator[Any, None, None]:
@@ -105,6 +106,9 @@ def stream_generator(
         starting the stream (default: False).
 
     :param attribute_name: The field to use as an id (default: "fullname").
+
+    :param attribute_function: A callable that gets passed the item and id and
+        can return a modified id.
 
     :param exclude_before: When True does not pass ``params`` to ``functions``
          (default: False).
@@ -185,6 +189,8 @@ def stream_generator(
             function_kwargs["params"] = {"before": before_attribute}
         for item in reversed(list(function(limit=limit, **function_kwargs))):
             attribute = getattr(item, attribute_name)
+            if attribute_function:
+                attribute = attribute_function(item, attribute)
             if attribute in seen_attributes:
                 continue
             found = True
